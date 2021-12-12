@@ -20,9 +20,9 @@ clear(True)
 
 #Sql injection warning
 if sqli_warning==True: 
-    printf("THIS PRODUCS SHOULD BE AVALIABLE ONLY FOR ADMINSTARTORS, IT IS NOT PROTECTED AGAINST SQL INJECTIONS!",Fore.RED)
+    printf("THIS PRODUCT SHOULD BE AVALIABLE ONLY FOR ADMINSTARTORS, IT IS NOT PROTECTED AGAINST SQL INJECTIONS!",Fore.RED)
     printf("Sql-cli will start in 5 seconds..",Fore.YELLOW)
-    printf("if you want to stop this please set sqli_warning to False in config.py",Fore.YELLOW)
+    printf("if you want to hide this message. please set sqli_warning to False in config.py",Fore.YELLOW)
     time.sleep(5)
     printf("Trying to connect to database using config.py",Fore.YELLOW)
 
