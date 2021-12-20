@@ -6,6 +6,7 @@ from config import*
 from colorama import Fore
 import time,os,inspect
 from datetime import datetime 
+from simple_term_menu import TerminalMenu as TM
 
 def printf(msg,color=Fore.WHITE):
     print(color + msg + Fore.WHITE)
@@ -14,16 +15,14 @@ def clear(force=False):
     if allow_clear_console==True or force==True:
         if os.name == 'nt':os.system('cls')
         else: os.system('clear') 
-    else:
-        print('\n')
 clear(True)
 
 #Sql injection warning
 if sqli_warning==True: 
-    printf("THIS PRODUCT SHOULD BE AVALIABLE ONLY FOR ADMINSTARTORS, IT IS NOT PROTECTED AGAINST SQL INJECTIONS!",Fore.RED)
-    printf("Sql-cli will start in 5 seconds..",Fore.YELLOW)
+    printf("THIS PRODUCT SHOULD BE AVALIABLE ONLY FOR ADMINSTARTORS, IT IS NOT PROTECTED AGAINST SELF-SQL INJECTIONS!",Fore.RED)
+    printf("Sql-cli will start in 3 seconds..",Fore.YELLOW)
     printf("if you want to hide this message. please set sqli_warning to False in config.py",Fore.YELLOW)
-    time.sleep(5)
+    time.sleep(3)
     printf("Trying to connect to database using config.py",Fore.YELLOW)
 
 #Setup
@@ -51,22 +50,21 @@ try:
     printf("Connected successfully!",Fore.GREEN)
 except:
     exit(printf("Error while conncting to database..",Fore.RED))
-time.sleep(1)
+
+def StringTuple(tp):
+    b=()
+    for i in tp:
+        b = b + (str(i),)
+    return b
 
 #Program
 def Home(inc=0):
     clear()
     if(inc==1):printf("Incorrect option: ",Fore.RED)
     printf("MODE: " + inspect.getframeinfo(inspect.currentframe()).function ,Fore.YELLOW)
-    printf("SELECT OPTION:",Fore.CYAN)
-    printf("[1] VIEW    :",Fore.LIGHTGREEN_EX)
-    printf("[2] INSERT  :",Fore.LIGHTGREEN_EX)
-    printf("[3] EDIT    :",Fore.LIGHTGREEN_EX)
-    printf("[4] DELETE  :",Fore.LIGHTGREEN_EX)
-    printf("[5] DESCRIBE:",Fore.YELLOW)
-    printf("[6] BACKUP  :",Fore.LIGHTGREEN_EX)
-    printf("[7] EXIT    :",Fore.LIGHTGREEN_EX)
-    r = input(Fore.LIGHTGREEN_EX + "OPTION: " + Fore.WHITE).replace('[','').replace(']','')
+    options = ["[1] VIEW","[2] INSERT","[3] EDIT","[4] DELETE","[X] DESCRIBE","[6] BACKUP","[7] EXIT"]
+    mainMenu = TM(options,title="Home")
+    r = str(mainMenu.show() + 1)
     if   r=='1':VIEW()
     elif r=='2':INSERT()
     elif r=='3':EDIT()
@@ -81,13 +79,12 @@ def VIEW(inc=0):
     if(inc==1):printf("Incorrect table name! ",Fore.RED)
     if(inc==2):printf("Incorrect columns name! ",Fore.RED)
     printf("MODE: " + inspect.getframeinfo(inspect.currentframe()).function ,Fore.YELLOW)
-    printf("SELECT OPTION:",Fore.CYAN)
     #list all tables
     query = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'")
-    tables = PrettyTable(["TABLES"])
-    for i in conn.execute(query):tables.add_row(i)
-    print(tables)
-    r = input(Fore.LIGHTGREEN_EX + "TABLE NAME: " + Fore.WHITE)
+    tables =[]
+    for i in conn.execute(query):tables.append(str(i)[2:-3])
+    menu = TM(tables,title="SELECT TABLE")
+    r = tables[menu.show()]
     d=""
     cls=[]
     try:
@@ -117,8 +114,11 @@ def INSERT(inc=0):
     if(inc==1):printf("Incorrect table name! ",Fore.RED)
     if(inc==2):printf("COLUMN HAS NO DEFAULT VALUE ! ",Fore.RED)
     printf("MODE: " + inspect.getframeinfo(inspect.currentframe()).function ,Fore.YELLOW)
-    printf("SELECT OPTION:",Fore.CYAN)
-    r = input(Fore.LIGHTGREEN_EX + "TABLE NAME: " + Fore.WHITE)
+    query = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'")
+    tables =[]
+    for i in conn.execute(query):tables.append(str(i)[2:-3])
+    menu = TM(tables,title="SELECT TABLE")
+    r = tables[menu.show()]
     d=""
     cls=[]
     try:
@@ -131,17 +131,21 @@ def INSERT(inc=0):
     data = ""
     printf("Press \"ENTER\" for default!")
 
+    insertedData = []
     for cl in cls:
         CL = input(cl+": ")
         if CL != "":
-            data += '"' + CL.replace('"','\"') + '"' + ',' #Common self-defense sqli (NOT SECURE AT ALL)
+            data += ' %s ' + ',' #Common self-defense sqli (NOT SECURE AT ALL)
             cols += cl + ',' 
-    
+            insertedData.append(CL)
+            print(insertedData)
+
     data=data[:-1];cols=cols[:-1]
+    newData = tuple(insertedData)
     query = f'INSERT INTO {r}({cols}) VALUES({data})'
 
     try:
-        rs = conn.execute(query)
+        rs = conn.execute(query,newData)
         printf("DATA INSERTED SUCCESSFULLY",Fore.GREEN)
     except:
         INSERT(2)
@@ -155,37 +159,64 @@ def EDIT(inc=0):
     if(inc==2):printf("Incorrect column name! ",Fore.RED)
     if(inc==3):printf("Incorrect condition! ",Fore.RED)
     printf("MODE: " + inspect.getframeinfo(inspect.currentframe()).function ,Fore.YELLOW)
-    printf("SELECT OPTION:",Fore.CYAN)
-    r = input(Fore.LIGHTGREEN_EX + "TABLE NAME: " + Fore.WHITE)
-    d=""
-    cls=[]
-    try:
-        d = Table(r, metadata, autoload=True, autoload_with=engine)
-        cls=d.columns.keys()
-        printf('|'.join(cls),Fore.GREEN)
-    except:
-        EDIT(1)
-    col = input("what column you want to edit?: ")
-    if col not in cls:EDIT(2)
-    data = input("what is the new value of this column?: ").replace('"','\"')
 
+    #Select table section
+    query = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'")
+    tables =[] #tables
+    for i in conn.execute(query):tables.append(str(i)[2:-3])
+    menu = TM(tables,title="SELECT TABLE")
+    r = tables[menu.show()]
+    
+    d = Table(r, metadata, autoload=True, autoload_with=engine)
+    cls=d.columns.keys() #columns
+
+    query = text(f"SELECT * FROM {r} ORDER BY {str(cls[0])}")
+    members=[]
+    conds=[]
+    ix=0
+    for i in conn.execute(query):
+        members.append(','.join(StringTuple(i)))
+        conds.append([])
+        for rw in i:
+            conds[ix].append(rw)
+        ix+=1
+        
+        
+    menu = TM(members,title="SELECT THE ROW: ") 
+    condi = menu.show()
+    time.sleep(0.5)
+    
+    query = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'")
+    menu = TM(cls,title="SELECT COLUMN")
+    col = cls[menu.show()]
+
+    inf=[]
+    for i in range(len(cls)):inf.append(str(conds[condi][i])) #Filling the data into the array
+    inf = tuple(inf) #Converting the array to tuple
+    #cls,#inf
+
+    #Generate the condition
+    whereCond = "WHERE "
+    for cl in cls:
+        whereCond += f" {cl} = %s AND"
+    whereCond = whereCond[:-3]
+    print(inf)
+
+    data = input("what is the new value of this column?: ")
     # [] TODO:  try to make the condition more efficent (beggeiners friendly)
 
-    if guide_examples == True:
-        printf("CONDITION:",Fore.CYAN) 
-        printf("Example 1 : ID = 5",Fore.LIGHTMAGENTA_EX)
-        printf("Example 2 : name='rami' OR name='john'",Fore.LIGHTMAGENTA_EX)
-        printf("Example 3 : email='squar3@sqrt.dev' AND id=93",Fore.LIGHTMAGENTA_EX)
-
-    cond = input("CONDITION: ")
-    query = f'UPDATE {r} SET {col}="{data}" WHERE {cond}'
+    #data,inf
+    finalInf = (data,) + inf 
+    #Final query
+    query = f'UPDATE {r} SET {col}=%s {whereCond}'
 
     try:
-        rs = conn.execute(query)
+        rs = conn.execute(query,finalInf)
         print(query)
         printf("DATA EDITED SUCCESSFULLY",Fore.GREEN)
     except:
         EDIT(3)
+
 
     input("PRESS ANY KEY TO GO BACK HOME!")
     Home()
@@ -196,7 +227,14 @@ def DELETE(inc=0):
     if(inc==2):printf("Incorrect condition! ",Fore.RED)
     printf("MODE: " + inspect.getframeinfo(inspect.currentframe()).function ,Fore.YELLOW)
     printf("SELECT OPTION:",Fore.CYAN)
-    r = input(Fore.LIGHTGREEN_EX + "TABLE NAME: " + Fore.WHITE)
+
+    #Select table section
+    query = text("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'")
+    tables =[] #tables
+    for i in conn.execute(query):tables.append(str(i)[2:-3])
+    menu = TM(tables,title="SELECT TABLE")
+    r = tables[menu.show()]
+    
     d=""
     cls=[]
     try:
