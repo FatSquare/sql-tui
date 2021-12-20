@@ -1,16 +1,22 @@
+<h1><color=red>WARNING: THIS PROJECT IS NOT READY YET. PLEASE DON'T USE IT ON YOUR PROJECTS</h1>
+ 
+  
 <h2>Information</h2>
 An SQL command line interface by Squar3 (MySQL only atm)<br>
 
+
 <h2>WARNINGS</h2>
 
-**This tool is not protected against SQL-Injections!<br>
-Please be aware. only for adminstrators usage ^^**
+This tool is not protected against SELF-SQL-Injections (yet)!<br> 
+  
+Please be aware. Don't use it on your projects. 
+
 
 <h2>Pre-requirements</h2>
 
 MySQL <br>
 python *[> 3.x]* <br>
-python-pip
+python3-pip
 
 + For debian Make sure you have these packages installed: 
 ```
