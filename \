@@ -52,9 +52,9 @@ except:
     printf("Error while conncting to database..",Fore.RED)
     yn = input(f"{Fore.WHITE}Do you want to setup your database? [{Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}]: ")
     if yn == '' or yn.upper() == 'Y':
-        path='./'
-        if str(__file__).count('/') != 0:
-            path=__file__[0:__file__.rfind('/')]+'/'
+        path=str(__file__)+'/'
+        print(__file__)
+        time.sleep(2) 
         os.system('${VISUAL-${EDITOR-nano}} '+path+'config.py')
         exit(1)
     else:exit(1)
@@ -283,8 +283,7 @@ def BACKUP(inc=0):
     randomid=datetime.now().strftime("%Y.%m.%d-%H:%M:%S")
     path=config_path
     if path=='':
-        if str(__file__).count('/') != 0:
-            path=__file__[0:__file__.rfind('/')]+'/'
+        path=os.getcwd()+'/'
     else:
         if path[-1]!='/':path+='/'
     os.system(f'mysqldump -u{username} -p{password} {database} > {path}backup-{randomid}.sql')
