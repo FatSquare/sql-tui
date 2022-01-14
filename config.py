@@ -1,10 +1,11 @@
-#U
+#configFile
+
 host="localhost"
 username="username"
 password="password"
 database="database"
 
-guide_examples=True
+debugLog=True
 allow_clear_console=False
-sqli_warning=True
-config_path="" #nothing means current direcotry
+sqli_warning=False
+config_path="./backups/" 
