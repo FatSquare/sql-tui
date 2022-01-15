@@ -74,12 +74,14 @@ metadata = 0
 engine = create_engine('mysql+pymysql://'+username+':'+password+'@'+host+'/'+database)
 
 def Refresh():
-    conn = False
-    metadata = 0
-    engine = create_engine('mysql+pymysql://'+username+':'+password+'@'+host+'/'+database)
-    conn = engine.connect()
-    metadata = MetaData()
-Refresh()
+    try:
+        conn = False
+        metadata = 0
+        engine = create_engine('mysql+pymysql://'+username+':'+password+'@'+host+'/'+database)
+        conn = engine.connect()
+        metadata = MetaData()
+    except:
+        pass
 
 #Database connection
 printf("Connecting to database",Fore.YELLOW)
@@ -114,9 +116,7 @@ def StringTuple(tp):
 
 #Program
 def Home(inc=0):
-    conn = engine.dispose()
-    conn = engine.connect()
-    metadata = MetaData()
+    Refresh()
     clear()
     if(inc==1):printf("Incorrect option: ",Fore.RED)
     printf("MODE: " + inspect.getframeinfo(inspect.currentframe()).function ,Fore.YELLOW)
