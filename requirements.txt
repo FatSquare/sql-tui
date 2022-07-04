@@ -1,5 +1,6 @@
 simple_term_menu
 python-inquirer
+inquirer
 pymysql
 prettytable
 sqlalchemy
